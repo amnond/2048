@@ -5,6 +5,7 @@ function GameManager(size, InputManager, Actuator, StorageManager) {
   this.actuator       = new Actuator;
 
   this.startTiles     = 2;
+  this.timerId        = null;
 
   this.inputManager.on("move", this.move.bind(this));
   this.inputManager.on("restart", this.restart.bind(this));
@@ -33,7 +34,14 @@ GameManager.prototype.isGameTerminated = function () {
 
 // Set up the game
 GameManager.prototype.setup = function () {
+  this.elapsed = 0;
+  this.target  = 1024;
   var previousState = this.storageManager.getGameState();
+
+  if (this.timerId != null) {
+    clearInterval( this.timerId );
+    this.timerId = null;
+  }
 
   // Reload the game from a previous game if present
   if (previousState) {
@@ -56,6 +64,7 @@ GameManager.prototype.setup = function () {
 
   // Update the actuator
   this.actuate();
+  this.actuator.updateTime(0);
 };
 
 // Set up the initial tiles to start the game with
@@ -126,12 +135,27 @@ GameManager.prototype.moveTile = function (tile, cell) {
   tile.updatePosition(cell);
 };
 
+GameManager.prototype.getTimerFunc = function(self) {
+    return function() {
+      self.elapsed += self.timeInc;
+      self.actuator.updateTime(self.elapsed);
+    }
+}
+
 // Move tiles on the grid in the specified direction
 GameManager.prototype.move = function (direction) {
   // 0: up, 1: right, 2: down, 3: left
   var self = this;
 
   if (this.isGameTerminated()) return; // Don't do anything if the game's over
+
+  if (this.timerId == null) {
+    var currDate = new Date();
+    this.startTime = currDate.getTime();
+    this.timeInc = 1; // seconds
+    var timerFunc = this.getTimerFunc(this);
+    this.timerId = setInterval(timerFunc, 1000*this.timeInc);
+  }
 
   var cell, tile;
 
@@ -167,7 +191,14 @@ GameManager.prototype.move = function (direction) {
           self.score += merged.value;
 
           // The mighty 2048 tile
-          if (merged.value === 2048) self.won = true;
+          if (merged.value === self.target) {
+            self.won = true;
+            clearInterval(self.timerId);
+            self.timerId = null;
+            var doneAt = new Date();
+            var time = (doneAt.getTime()-self.startTime)/1000;
+            self.actuator.updateTime(time.toFixed(2));
+          }
         } else {
           self.moveTile(tile, positions.farthest);
         }
@@ -184,6 +215,8 @@ GameManager.prototype.move = function (direction) {
 
     if (!this.movesAvailable()) {
       this.over = true; // Game over!
+      clearInterval(this.timerId);
+      this.timerId = null;
     }
 
     this.actuate();

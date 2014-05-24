@@ -4,8 +4,11 @@ function HTMLActuator() {
   this.bestContainer    = document.querySelector(".best-container");
   this.messageContainer = document.querySelector(".game-message");
 
+  this.timeContainer    = document.querySelector(".time-container");
+
   this.score = 0;
 }
+
 
 HTMLActuator.prototype.actuate = function (grid, metadata) {
   var self = this;
@@ -102,6 +105,11 @@ HTMLActuator.prototype.positionClass = function (position) {
   position = this.normalizePosition(position);
   return "tile-position-" + position.x + "-" + position.y;
 };
+
+HTMLActuator.prototype.updateTime = function (time) {
+  this.clearContainer(this.timeContainer);
+  this.timeContainer.textContent = time; //.toFixed(1);
+}
 
 HTMLActuator.prototype.updateScore = function (score) {
   this.clearContainer(this.scoreContainer);
