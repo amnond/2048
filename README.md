@@ -5,5 +5,5 @@ Added a timer to check how fast you can reach 1024 in  [gabrielecirulli's](http:
 See if you can beat my record time (under 160 seconds...) :
 
 <p align="center">
-  <img src="http://nocurve.com/1024_race_record.png" alt="Screenshot"/>
+  <img src="http://nocurve.com/content/1024_race_record.png" alt="Screenshot"/>
 </p>
